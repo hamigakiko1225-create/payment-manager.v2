@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>支払い管理</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f5f8;
+      color: #1f1f1f;
+      font-size: 16px;
+    }
+    header {
+      padding: 14px;
+      background: #1f1f1f;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: 0 2px 12px rgba(0,0,0,.16);
+    }
+    header h1 { margin: 0; font-size: 18px; }
+    .sub { margin-top: 4px; color: #ccc; font-size: 12px; }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px;
+      padding-bottom: 92px;
+    }
+    .month-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .month-box label {
+      font-size: 11px;
+      color: #666;
+      font-weight: 900;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .month-box input {
+      width: 100%;
+      border: none;
+      background: #f6f7f9;
+      border-radius: 12px;
+      padding: 11px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .summary .wide { grid-column: 1 / -1; }
+    .summary-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .summary-card small {
+      display: block;
+      color: #666;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .amount {
+      font-size: 21px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .big { font-size: 30px; color: #d93025; }
+    .green { color: #137333; }
+    .debt-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #666;
+      font-weight: 800;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 0 12px;
+      position: sticky;
+      top: 67px;
+      background: #f4f5f8;
+      z-index: 20;
+    }
+    .tab {
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: #fff;
+      color: #333;
+      font-weight: 900;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .tab.active { background: #1f1f1f; color: #fff; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 4px 2px 10px;
+    }
+    .section-title h2 { margin: 0; font-size: 17px; }
+    .count {
+      color: #666;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .group-title {
+      margin: 12px 2px 8px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #444;
+    }
+    .item-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 11px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .item-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .name-input {
+      flex: 1;
+      font-size: 17px;
+      font-weight: 900;
+      border: none;
+      background: #f6f7f9;
+      border-radius: 12px;
+      padding: 10px;
+      min-width: 0;
+    }
+    .status {
+      width: auto;
+      border: none;
+      background: #eef2ff;
+      color: #243b7a;
+      border-radius: 999px;
+      padding: 9px 8px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .money-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+    .field {
+      background: #f6f7f9;
+      border-radius: 14px;
+      padding: 8px;
+    }
+    .label {
+      display: block;
+      color: #666;
+      font-size: 11px;
+      font-weight: 900;
+      margin-bottom: 3px;
+    }
+    input, textarea, select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 18px;
+      font-weight: 900;
+      color: #1f1f1f;
+      outline: none;
+    }
+    textarea {
+      resize: none;
+      min-height: 20px;
+      height: 20px;
+      max-height: 120px;
+      overflow: hidden;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+      padding: 0;
+    }
+    .read-only {
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.3;
+      color: #333;
+      min-height: 20px;
+    }
+    .muted { color: #777; }
+    .payoff {
+      color: #d93025;
+      font-weight: 900;
+    }
+    .item-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .item-actions button { flex: 1; }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 11px 14px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .add {
+      background: #1f1f1f;
+      color: #fff;
+      width: 100%;
+      margin: 4px 0 14px;
+      padding: 14px;
+      font-size: 15px;
+    }
+    .pay { background: #e6f4ea; color: #137333; }
+    .paid-btn { background: #eeeeee; color: #777; }
+    .delete { background: #ffe8e5; color: #b3261e; }
+    .secondary { background: #e9e9e9; color: #222; }
+    .restore { background: #eef2ff; color: #243b7a; }
+    .paid { opacity: .62; }
+    .paid .name-input { text-decoration: line-through; }
+    .calendar {
+      background: #fff;
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .calendar-head {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 6px;
+      color: #777;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .day {
+      min-height: 68px;
+      background: #f6f7f9;
+      border-radius: 10px;
+      padding: 5px;
+      font-size: 11px;
+      overflow: hidden;
+    }
+    .day.empty { background: transparent; }
+    .day-num { font-weight: 900; margin-bottom: 3px; }
+    .cal-item {
+      background: #fff;
+      border-radius: 7px;
+      padding: 3px;
+      margin-top: 3px;
+      line-height: 1.2;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .cal-item.done {
+      background: #e6f4ea;
+      color: #137333;
+      text-decoration: line-through;
+    }
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 8px;
+      z-index: 40;
+    }
+    .bottom-bar button { flex: 1; }
+    .empty-message {
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      color: #777;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>支払い管理</h1>
+    <div class="sub">月ごとの支払い・残債・完済予定を管理</div>
+  </header>
+
+  <main>
+    <div class="month-box">
+      <div>
+        <label>管理する月</label>
+        <input id="currentMonth" type="month" onchange="changeMonth(this.value)" />
+      </div>
+      <button class="secondary" onclick="goThisMonth()">今月</button>
+    </div>
+
+    <div class="summary">
+      <div class="summary-card wide">
+        <small>今月予定</small>
+        <div class="amount big" id="monthlyTotal">¥0</div>
+      </div>
+      <div class="summary-card">
+        <small>支払い済み</small>
+        <div class="amount green" id="paidTotal">¥0</div>
+      </div>
+      <div class="summary-card">
+        <small>残り</small>
+        <div class="amount" id="remainingTotal">¥0</div>
+      </div>
+      <div class="summary-card">
+        <small>生活費</small>
+        <div class="amount" id="fixedTotal">¥0</div>
+      </div>
+      <div class="summary-card">
+        <small>総残債</small>
+        <div class="amount" id="totalDebt">¥0</div>
+
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('calendar')">カレンダー</button>
+      <button class="tab" onclick="setTab('fixed')">生活費</button>
+      <button class="tab" onclick="setTab('loan')">借入</button>
+      <button class="tab" onclick="setTab('unpaid')">未払い</button>
+      <button class="tab" onclick="setTab('completed')">完済一覧</button>
+    </div>
+
+    <div class="section-title">
+      <h2 id="sectionName">カレンダー</h2>
+      <span class="count" id="sectionTotal"></span>
+    </div>
+
+    <div id="content"></div>
+  </main>
+
+  <div class="bottom-bar">
+    <button onclick="saveData()">保存</button>
+    <button class="secondary" onclick="exportCSV()">CSV</button>
+    <button class="secondary" onclick="resetData()">初期化</button>
+  </div>
+
+<script>
+const initialData = {
+  fixed: [
+    { name: "家賃", total: 0, monthly: 65000, dueDay: 25, memo: "引越しで軽減予定", completed: false },
+    { name: "光熱費", total: 0, monthly: 20000, dueDay: 27, memo: "引越しで軽減予定", completed: false },
+    { name: "雑費", total: 0, monthly: 60000, dueDay: 1, memo: "食費・病院・日用品", completed: false },
+    { name: "交通費", total: 0, monthly: 9400, dueDay: 1, memo: "480×20日片道計算", completed: false },
+    { name: "保険", total: 0, monthly: 8000, dueDay: 15, memo: "", completed: false },
+    { name: "ネイル代", total: 0, monthly: 10000, dueDay: 10, memo: "", completed: false },
+    { name: "美容室代", total: 0, monthly: 25000, dueDay: 10, memo: "", completed: false }
+  ],
+  loan: [
+    { name: "アイフル", total: 170000, monthly: 10800, dueDay: 25, memo: "年内完済予定", completed: false },
+    { name: "メルカリ", total: 80000, monthly: 4000, dueDay: 25, memo: "年内完済予定", completed: false },
+    { name: "奨学金①", total: 300000, monthly: 12222, dueDay: 27, memo: "年内完済予定", completed: false },
+    { name: "奨学金②", total: 600000, monthly: 6500, dueDay: 27, memo: "", completed: false },
+    { name: "田中家賃", total: 210000, monthly: 10000, dueDay: 25, memo: "", completed: false },
+    { name: "玉野携帯", total: 160000, monthly: 7000, dueDay: 25, memo: "", completed: false },
+    { name: "飛行機代", total: 20000, monthly: 5000, dueDay: 25, memo: "", completed: false },
+    { name: "エブリィ", total: 70000, monthly: 3000, dueDay: 25, memo: "", completed: false }
+  ],
+  friend: [
+    { name: "雅視", total: 280000, monthly: 10000, dueDay: 30, memo: "任意", completed: false },
+    { name: "泰基", total: 270000, monthly: 10000, dueDay: 30, memo: "任意", completed: false },
+    { name: "川口", total: 400000, monthly: 10000, dueDay: 30, memo: "任意", completed: false },
+    { name: "田中", total: 90000, monthly: 10000, dueDay: 30, memo: "任意", completed: false }
+  ],
+  unpaid: [
+    { name: "ユニクロ", total: 7000, monthly: 7000, dueDay: 25, memo: "4/25完済予定", completed: false },
+    { name: "GU", total: 7000, monthly: 7000, dueDay: 25, memo: "4/25完済予定", completed: false },
+    { name: "カメラ", total: 7000, monthly: 7000, dueDay: 25, memo: "4/25完済予定", completed: false },
+    { name: "ユーキャン", total: 10000, monthly: 10000, dueDay: 25, memo: "4/25完済予定", completed: false },
+    { name: "ZOZO", total: 47000, monthly: 47000, dueDay: 25, memo: "4/25完済予定", completed: false }
+  ],
+  payments: {}
+};
+
+const storageKey = "moneyAppDataCalendarV3";
+let data = JSON.parse(localStorage.getItem(storageKey)) || JSON.parse(localStorage.getItem("moneyAppDataCalendar")) || structuredClone(initialData);
+
+if (!data.payments) data.payments = {};
+for (const key of ["fixed","loan","friend","unpaid"]) {
+  if (!data[key]) data[key] = [];
+  data[key].forEach(x => {
+    if (typeof x.completed === "undefined") x.completed = x.paid || false;
+    if (typeof x.dueDay === "undefined") x.dueDay = 25;
+    if (x.completed && !x.completedMonth && Number(x.total || 0) === 0) x.completedMonth = "不明";
+  });
+}
+
+let currentTab = "calendar";
+let selectedMonth = getThisMonth();
+
+const names = {
+  calendar: "カレンダー",
+  fixed: "生活費",
+  loan: "借入",
+  friend: "知人返済",
+  unpaid: "未払い",
+  completed: "完済一覧"
+};
+
+const tabOrder = ["calendar", "fixed", "loan", "unpaid", "completed"];
+const activeKeys = ["fixed", "loan", "friend", "unpaid"];
+
+function getThisMonth() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+
+function formatMonth(monthStr) {
+  if (!monthStr || monthStr === "不明") return "不明";
+  const [y, m] = monthStr.split("-");
+  return `${Number(y)}年${Number(m)}月`;
+}
+
+function addMonths(monthStr, add) {
+  const [year, month] = monthStr.split("-").map(Number);
+  const d = new Date(year, month - 1 + add, 1);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+
+function goThisMonth() {
+  selectedMonth = getThisMonth();
+  document.getElementById("currentMonth").value = selectedMonth;
+  render();
+}
+
+function changeMonth(value) {
+  selectedMonth = value || getThisMonth();
+  render();
+}
+
+function itemId(key, index) {
+  return key + "-" + index;
+}
+
+function isPaidThisMonth(key, index) {
+  return !!data.payments[selectedMonth]?.[itemId(key, index)];
+}
+
+function yen(n) {
+  return "¥" + Number(n || 0).toLocaleString();
+}
+
+function payoffText(item, key) {
+  if (key === "fixed") return "";
+  if (item.completed) return item.completedMonth ? `完済済み（${formatMonth(item.completedMonth)}）` : "完済済み";
+
+  const total = Number(item.total || 0);
+  const monthly = Number(item.monthly || 0);
+
+  if (total <= 0) return "今月完済可能";
+  if (monthly <= 0) return "今月支払い未設定";
+
+  const count = Math.ceil(total / monthly);
+  const targetMonth = addMonths(selectedMonth, count - 1);
+  return `${formatMonth(targetMonth)}予定 / あと${count}回`;
+}
+
+function setTab(key) {
+  currentTab = key;
+  document.querySelectorAll(".tab").forEach((b, i) => {
+    b.classList.toggle("active", tabOrder[i] === key);
+  });
+  render();
+}
+
+function allActiveItems() {
+  const items = [];
+  for (const key of activeKeys) {
+    data[key].forEach((item, index) => {
+      if (!item.completed) items.push({ key, index, item });
+    });
+  }
+  return items;
+}
+
+function allCompletedItems() {
+  const items = [];
+  for (const key of activeKeys) {
+    data[key].forEach((item, index) => {
+      if (item.completed) items.push({ key, index, item });
+    });
+  }
+  return items;
+}
+
+function debtSum(key) {
+  return data[key].filter(x => !x.completed).reduce((s, x) => s + Number(x.total || 0), 0);
+}
+
+function calc() {
+  const active = allActiveItems();
+  const monthly = active.reduce((s, x) => s + Number(x.item.monthly || 0), 0);
+  const fixed = data.fixed.filter(x => !x.completed).reduce((s, x) => s + Number(x.monthly || 0), 0);
+  const loanDebt = debtSum("loan");
+  const friendDebt = debtSum("friend");
+  const unpaidDebt = debtSum("unpaid");
+  const totalDebt = loanDebt + friendDebt + unpaidDebt;
+
+  const paid = active
+    .filter(x => isPaidThisMonth(x.key, x.index))
+    .reduce((s, x) => s + Number(data.payments[selectedMonth][itemId(x.key, x.index)].amount || 0), 0);
+
+  document.getElementById("monthlyTotal").textContent = yen(monthly);
+  document.getElementById("paidTotal").textContent = yen(paid);
+  document.getElementById("remainingTotal").textContent = yen(Math.max(0, monthly - paid));
+  document.getElementById("fixedTotal").textContent = yen(fixed);
+  document.getElementById("totalDebt").textContent = yen(totalDebt);
+
+
+
+}
+
+function render() {
+  document.getElementById("currentMonth").value = selectedMonth;
+  calc();
+  document.getElementById("sectionName").textContent = names[currentTab];
+
+  if (currentTab === "calendar") {
+    renderCalendar();
+  } else if (currentTab === "completed") {
+    renderCompletedList();
+  } else if (currentTab === "loan") {
+    renderLoanTab();
+  } else {
+    renderSingleList(currentTab);
+  }
+
+  setTimeout(resizeAllMemos, 0);
+}
+
+function renderLoanTab() {
+  const loanItems = data.loan.filter(x => !x.completed);
+  const friendItems = data.friend.filter(x => !x.completed);
+  document.getElementById("sectionTotal").textContent = (loanItems.length + friendItems.length) + "件";
+
+  let html = "";
+  html += `<div class="group-title">▼ 借入</div>`;
+  html += loanItems.length ? loanItems.map(item => renderItemCard("loan", data.loan.indexOf(item), item)).join("") : '<div class="empty-message">借入項目がありません</div>';
+  html += '<button class="add" onclick="addItem(\'loan\')">＋ 借入を追加</button>';
+
+  html += `<div class="group-title">▼ 知人返済</div>`;
+  html += friendItems.length ? friendItems.map(item => renderItemCard("friend", data.friend.indexOf(item), item)).join("") : '<div class="empty-message">知人返済項目がありません</div>';
+  html += '<button class="add" onclick="addItem(\'friend\')">＋ 知人返済を追加</button>';
+
+  document.getElementById("content").innerHTML = html;
+}
+
+function renderSingleList(key) {
+  const items = data[key].filter(x => !x.completed);
+  document.getElementById("sectionTotal").textContent = items.length + "件";
+
+  if (!items.length) {
+    document.getElementById("content").innerHTML = '<div class="empty-message">項目がありません</div><button class="add" onclick="addItem(\'' + key + '\')">＋ 項目を追加</button>';
+    return;
+  }
+
+  document.getElementById("content").innerHTML =
+    items.map(item => renderItemCard(key, data[key].indexOf(item), item)).join("") +
+    '<button class="add" onclick="addItem(\'' + key + '\')">＋ 項目を追加</button>';
+}
+
+function renderItemCard(key, index, item) {
+  const paidMonth = isPaidThisMonth(key, index);
+  const isFixed = key === "fixed";
+  return `
+    <div class="item-card">
+      <div class="item-top">
+        <input class="name-input" value="${escapeHtml(item.name)}" onchange="updateItem('${key}', ${index}, 'name', this.value)" />
+        <select class="status" onchange="updateItem('${key}', ${index}, 'completed', this.value === 'true')">
+          <option value="false" selected>継続</option>
+          <option value="true">完了</option>
+        </select>
+      </div>
+
+      <div class="money-row">
+        ${isFixed ? `
+        <div class="field" style="grid-column:1/-1;">
+          <span class="label">今月支払い</span>
+          <input type="number" inputmode="numeric" value="${item.monthly}" onchange="updateItem('${key}', ${index}, 'monthly', this.value)" />
+        </div>
+        ` : `
+        <div class="field">
+          <span class="label">残債</span>
+          <input type="number" inputmode="numeric" value="${item.total}" onchange="updateItem('${key}', ${index}, 'total', this.value)" />
+        </div>
+        <div class="field">
+          <span class="label">今月支払い</span>
+          <input type="number" inputmode="numeric" value="${item.monthly}" onchange="updateItem('${key}', ${index}, 'monthly', this.value)" />
+        </div>
+        `}
+      </div>
+
+      <div class="money-row">
+        <div class="field">
+          <span class="label">支払日</span>
+          <input type="number" inputmode="numeric" min="1" max="31" value="${item.dueDay || 25}" onchange="updateItem('${key}', ${index}, 'dueDay', this.value)" />
+        </div>
+        <div class="field">
+          <span class="label">今月状態</span>
+          <div class="read-only">${paidMonth ? '支払い済み' : '未払い'}</div>
+        </div>
+      </div>
+
+      ${isFixed ? '' : `
+      <div class="field">
+        <span class="label">完済予定</span>
+        <div class="read-only payoff">${escapeHtml(payoffText(item, key))}</div>
+      </div>
+      `}
+
+      <div class="field" style="margin-top:6px;">
+        <span class="label">メモ</span>
+        <textarea rows="1" oninput="autoResizeMemo(this); updateItemNoRender('${key}', ${index}, 'memo', this.value)">${escapeHtml(item.memo || "")}</textarea>
+      </div>
+
+      <div class="item-actions">
+        <button class="${paidMonth ? 'paid-btn' : 'pay'}" onclick="payItem('${key}', ${index})">${paidMonth ? '支払い取消' : '支払い'}</button>
+        <button class="delete" onclick="deleteItem('${key}', ${index})">削除</button>
+      </div>
+    </div>`;
+}
+
+function renderCompletedList() {
+  const completed = allCompletedItems();
+  document.getElementById("sectionTotal").textContent = completed.length + "件";
+
+  if (!completed.length) {
+    document.getElementById("content").innerHTML = '<div class="empty-message">完済した項目はまだありません</div>';
+    return;
+  }
+
+  document.getElementById("content").innerHTML = completed.map(x => `
+    <div class="item-card paid">
+      <div class="item-top">
+        <input class="name-input" value="${escapeHtml(x.item.name)}" readonly />
+        <div class="status">${names[x.key]}</div>
+      </div>
+
+      <div class="money-row">
+        <div class="field">
+          <span class="label">完済月</span>
+          <div class="read-only">${escapeHtml(formatMonth(x.item.completedMonth || "不明"))}</div>
+        </div>
+        <div class="field">
+          <span class="label">元の支払い</span>
+          <div class="read-only">${yen(x.item.monthly || 0)}</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">メモ</span>
+        <div class="read-only muted">${escapeHtml(x.item.memo || "")}</div>
+      </div>
+
+      <div class="item-actions">
+        <button class="restore" onclick="restoreItem('${x.key}', ${x.index})">再表示</button>
+        <button class="delete" onclick="deleteItem('${x.key}', ${x.index})">削除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderCalendar() {
+  document.getElementById("sectionTotal").textContent = selectedMonth;
+  const [year, month] = selectedMonth.split("-").map(Number);
+  const first = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0).getDate();
+  const startWeek = first.getDay();
+
+  const byDay = {};
+  allActiveItems().forEach(x => {
+    const day = Math.min(Math.max(Number(x.item.dueDay || 25), 1), lastDay);
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(x);
+  });
+
+  let cells = "";
+  for (let i = 0; i < startWeek; i++) cells += '<div class="day empty"></div>';
+  for (let day = 1; day <= lastDay; day++) {
+    const items = byDay[day] || [];
+    cells += `<div class="day"><div class="day-num">${day}</div>`;
+    items.slice(0, 3).forEach(x => {
+      const done = isPaidThisMonth(x.key, x.index);
+      cells += `<div class="cal-item ${done ? 'done' : ''}">${escapeHtml(x.item.name)}<br>${yen(x.item.monthly)}</div>`;
+    });
+    if (items.length > 3) cells += `<div class="cal-item">他${items.length - 3}件</div>`;
+    cells += '</div>';
+  }
+
+  document.getElementById("content").innerHTML = `
+    <div class="calendar">
+      <div class="calendar-head">
+        <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+      </div>
+      <div class="calendar-grid">${cells}</div>
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function autoResizeMemo(el) {
+  el.style.height = "20px";
+  const next = Math.min(120, Math.max(20, el.scrollHeight));
+  el.style.height = next + "px";
+}
+
+function resizeAllMemos() {
+  document.querySelectorAll("textarea").forEach(autoResizeMemo);
+}
+
+function updateItemNoRender(key, index, field, value) {
+  data[key][index][field] = value;
+  saveData(false);
+}
+
+function updateItem(key, index, field, value) {
+  const item = data[key][index];
+
+  if (field === "total" || field === "monthly" || field === "dueDay") {
+    item[field] = Number(value);
+  } else {
+    item[field] = value;
+  }
+
+  if (field === "completed") {
+    if (value === true) {
+      item.completedMonth = selectedMonth;
+      if (!String(item.memo || "").includes("完済")) {
+        item.memo = item.memo ? item.memo + " / 完済" : "完済";
+      }
+    } else {
+      delete item.completedMonth;
+      item.memo = String(item.memo || "").replace(" / 完済", "").replace("完済", "").trim();
+    }
+  }
+
+  saveData(false);
+  render();
+}
+
+function addItem(key) {
+  data[key].push({ name: "新規", total: 0, monthly: 0, dueDay: 25, memo: "", completed: false });
+  saveData(false);
+  render();
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+}
+
+function payItem(key, index) {
+  const item = data[key][index];
+  const id = itemId(key, index);
+  if (!data.payments[selectedMonth]) data.payments[selectedMonth] = {};
+
+  if (data.payments[selectedMonth][id]) {
+    const paidAmount = Number(data.payments[selectedMonth][id].amount || item.monthly || 0);
+    delete data.payments[selectedMonth][id];
+
+    if (key !== "fixed") {
+      item.total = Number(item.total || 0) + paidAmount;
+
+      if (item.completed) {
+        item.completed = false;
+        delete item.completedMonth;
+        item.memo = String(item.memo || "").replace(" / 完済", "").replace("完済", "").trim();
+      }
+    }
+
+    saveData(false);
+    render();
+    return;
+  }
+
+  const payment = Number(item.monthly || 0);
+  if (payment <= 0) {
+    alert("今月支払いが0円です");
+    return;
+  }
+
+  data.payments[selectedMonth][id] = {
+    amount: payment,
+    date: new Date().toISOString().slice(0, 10),
+    name: item.name,
+    category: key
+  };
+
+  if (key !== "fixed") {
+    item.total = Math.max(0, Number(item.total || 0) - payment);
+    if (item.total === 0) {
+      item.completed = true;
+      item.completedMonth = selectedMonth;
+      if (!String(item.memo || "").includes("完済")) {
+        item.memo = item.memo ? item.memo + " / 完済" : "完済";
+      }
+      alert(item.name + " を完済しました。完済一覧に移動します。");
+    }
+  }
+
+  saveData(false);
+  render();
+}
+
+function restoreItem(key, index) {
+  const item = data[key][index];
+  item.completed = false;
+  delete item.completedMonth;
+  item.memo = String(item.memo || "").replace(" / 完済", "").replace("完済", "").trim();
+
+  if (key !== "fixed" && Number(item.total || 0) <= 0) {
+    item.total = Number(item.monthly || 0);
+  }
+
+  saveData(false);
+  render();
+}
+
+function deleteItem(key, index) {
+  if (!confirm("削除しますか？")) return;
+  data[key].splice(index, 1);
+  saveData(false);
+  render();
+}
+
+function saveData(alertUser = true) {
+  localStorage.setItem(storageKey, JSON.stringify(data));
+  if (alertUser) alert("保存しました");
+}
+
+function resetData() {
+  if (!confirm("初期データに戻しますか？")) return;
+  data = structuredClone(initialData);
+  saveData(false);
+  render();
+}
+
+function exportCSV() {
+  const lines = [["月", "分類", "項目", "残債", "今月支払い", "支払日", "完済予定", "メモ", "状態", "選択月支払い", "完済月"]];
+  for (const key of activeKeys) {
+    data[key].forEach((item, index) => {
+      lines.push([
+        selectedMonth,
+        names[key],
+        item.name,
+        item.total,
+        item.monthly,
+        item.dueDay,
+        payoffText(item, key),
+        item.memo,
+        item.completed ? "完済" : "継続",
+        isPaidThisMonth(key, index) ? "支払い済み" : "未払い",
+        item.completedMonth || ""
+      ]);
+    });
+  }
+  const csv = lines.map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = selectedMonth + "_支払い管理.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+render();
+</script>
+</body>
+</html>
