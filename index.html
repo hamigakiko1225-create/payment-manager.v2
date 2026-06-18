@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>支払い管理</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1f1f1f">
+<meta name="theme-color" content="#1f1f1f">
   <link rel="apple-touch-icon" href="icon.png">
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -376,6 +376,24 @@
       backdrop-filter: blur(18px);
     }
 
+  
+    /* Fix paid total visibility */
+    #paidTotal,
+    .green {
+      color: #6f8fbf !important;
+      text-shadow: none !important;
+    }
+
+    #remainingTotal,
+    #fixedTotal,
+    #totalDebt {
+      color: #5b6780 !important;
+    }
+
+    .summary-card small {
+      color: #7d8aa6 !important;
+    }
+
   </style>
 </head>
 <body>
@@ -436,7 +454,7 @@
   <div class="bottom-bar">
     <button onclick="saveData()">保存</button>
     <button class="secondary" onclick="exportCSV()">CSV</button>
-    <button class="secondary" onclick="resetData()">初期化</button>
+    <button class="secondary" onclick="resetData()">全削除</button>
   </div>
 
 <script>
@@ -600,9 +618,8 @@ function calc() {
   const unpaidDebt = debtSum("unpaid");
   const totalDebt = loanDebt + friendDebt + unpaidDebt;
 
-  const paid = active
-    .filter(x => isPaidThisMonth(x.key, x.index))
-    .reduce((s, x) => s + Number(data.payments[selectedMonth][itemId(x.key, x.index)].amount || 0), 0);
+  const paid = Object.values(data.payments[selectedMonth] || {})
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
 
   document.getElementById("monthlyTotal").textContent = yen(monthly);
   document.getElementById("paidTotal").textContent = yen(paid);
@@ -936,8 +953,14 @@ function saveData(alertUser = true) {
 }
 
 function resetData() {
-  if (!confirm("初期データに戻しますか？")) return;
-  data = structuredClone(initialData);
+  if (!confirm("すべてのカードと支払い履歴を削除しますか？")) return;
+  data = {
+    fixed: [],
+    loan: [],
+    friend: [],
+    unpaid: [],
+    payments: {}
+  };
   saveData(false);
   render();
 }
